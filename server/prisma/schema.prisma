@@ -10,17 +10,50 @@ datasource db {
 model User {
   id        Int       @id @default(autoincrement())
   email     String    @unique
+  password  String
   name      String
+  role      String    @default("USER") 
+  bio       String?   
+  jobTitle  String?
   projects  Project[]
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt 
 }
 
 model Project {
   id           Int       @id @default(autoincrement())
   title        String
   description  String
-  schematicUrl String?   // Path gambar
-  githubUrl    String?   // Link repository
+  schematicUrl String?
+  githubUrl    String?
+  views        Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt 
+
   authorId     Int
   author       User      @relation(fields: [authorId], references: [id])
-  createdAt    DateTime  @default(now())
+  components   ComponentsOnProjects[]
+
+  @@index([title]) 
+  @@index([authorId])
+  @@index([views])
+}
+
+model Component {
+  id            Int      @id @default(autoincrement())
+  name          String   @unique
+  description   String?  
+  datasheetUrl  String?
+  type          String 
+  projects      ComponentsOnProjects[]
+}
+
+model ComponentsOnProjects {
+  projectId   Int
+  componentId Int
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  component   Component @relation(fields: [componentId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, componentId])
 }

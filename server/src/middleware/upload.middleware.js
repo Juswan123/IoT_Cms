@@ -1,36 +1,41 @@
+// src/middleware/upload.middleware.js
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Pastikan folder upload ada
-const uploadDir = 'public/uploads/schematics';
-if (!fs.existsSync(uploadDir)){
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
+// Konfigurasi penyimpanan
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
+  destination: function (req, file, cb) {
+    // Arahkan ke folder public/uploads/schematic
+    const uploadPath = path.join(__dirname, '../../public/uploads/schematic');
+    
+    // Cek apakah folder ada, jika tidak buat dulu
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    
+    cb(null, uploadPath);
   },
-  filename: (req, file, cb) => {
+  filename: function (req, file, cb) {
+    // Namai file: timestamp-namaasli.ext
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'schematic-' + uniqueSuffix + path.extname(file.originalname));
+    cb(null, uniqueSuffix + path.extname(file.originalname));
   }
 });
 
+// Filter file (Opsional: hanya terima gambar)
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Bukan file gambar!'), false);
+  }
+};
+
 const upload = multer({ 
   storage: storage,
-  limits: { fileSize: 2 * 1024 * 1024 }, // BATAS 2 MB (dalam bytes)
-  fileFilter: (req, file, cb) => {
-    const filetypes = /jpeg|jpg|png|gif/;
-    const mimetype = filetypes.test(file.mimetype);
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-
-    if (mimetype && extname) {
-      return cb(null, true);
-    }
-    cb(new Error('Hanya file gambar yang diperbolehkan!'));
-  }
+  limits: { fileSize: 5 * 1024 * 1024 }, // Limit 5MB
+  fileFilter: fileFilter
 });
 
 module.exports = upload;
