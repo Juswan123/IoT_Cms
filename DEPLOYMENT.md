@@ -161,7 +161,7 @@ server {
     listen 80;
     server_name _;
 
-    client_max_body_size 50M;
+    client_max_body_size 5M;
 
     location /uploads/ {
         alias /home/ubuntu/IoT_Cms/server/public/uploads/;
